@@ -1,0 +1,25 @@
+# Unity generated
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+[Bb]uild/
+[Bb]uilds/
+
+# IDE
+.vs/
+.idea/
+.vscode/
+
+# Visual Studio / Rider generated
+*.csproj
+*.sln
+*.user
+*.userprefs
+*.pidb
+*.opendb
+*.VC.db
+
+# OS
+.DS_Store
+sysinfo.txt
