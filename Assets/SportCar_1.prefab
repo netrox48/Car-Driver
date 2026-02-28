@@ -1112,6 +1112,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6ebaa94097f3da47a01d47be07f26f3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6493876733588126686}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6ebaa94097f3da47a01d47be07f26f3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6322867659904457064}
   m_SourcePrefab: {fileID: 100100000, guid: f6ebaa94097f3da47a01d47be07f26f3, type: 3}
 --- !u!4 &6064422583433810922 stripped
 Transform:
@@ -1227,6 +1230,7 @@ MonoBehaviour:
   - {fileID: 1973210219671453578}
   - {fileID: 3010839586712457368}
   - {fileID: 8364254132281728923}
+  - {fileID: 6322867659904457064}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &1973210219671453578
 MonoBehaviour:
@@ -1293,6 +1297,27 @@ MonoBehaviour:
   ClientPhysicsSimulation: 0
   DeltaTimeMultiplier: 1
   SetUnityFixedTimestep: 0
+--- !u!114 &6322867659904457064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6873329321224538448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df01cf69b58223c4abcd69f58a85d128, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rb: {fileID: 2965748197703906821}
+  forwardRef: {fileID: 6064422583433810922}
+  minSpeedToDrift: 8
+  sideGripNormal: 0.9
+  sideGripDrift: 0.5
+  extraYawTorque: 2
+  sideSlipAssist: 12
+  recoverStrength: 16
+  driftLerpSpeed: 2
 --- !u!1001 &6838201629118819215
 PrefabInstance:
   m_ObjectHideFlags: 0
