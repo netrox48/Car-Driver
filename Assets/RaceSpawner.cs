@@ -1,26 +1,25 @@
-// RaceSpawner.cs
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
 public class RaceSpawner : NetworkBehaviour
 {
-    public NetworkPrefabRef carPrefab;
+    [Header("Cars (index = CarId)")]
+    public NetworkPrefabRef[] carPrefabs;
+
     public Transform[] spawnPoints;
     public float lockSeconds = 5f;
 
     private int nextIndex = 0;
-
-    // Ayný PlayerRef’e birden fazla araba spawn edilmesini engeller
     private readonly HashSet<PlayerRef> _spawnedPlayers = new HashSet<PlayerRef>();
 
-    public void SpawnCarFor(PlayerRef player)
+    public void SpawnCarFor(PlayerRef player, int carId)
     {
         if (!Object.HasStateAuthority) return;
 
-        if (!carPrefab.IsValid)
+        if (carPrefabs == null || carPrefabs.Length == 0)
         {
-            Debug.LogError("RaceSpawner: carPrefab boþ!");
+            Debug.LogError("RaceSpawner: carPrefabs boþ!");
             return;
         }
 
@@ -30,9 +29,17 @@ public class RaceSpawner : NetworkBehaviour
             return;
         }
 
-        // Duplicate spawn korumasý
         if (_spawnedPlayers.Contains(player))
             return;
+
+        carId = Mathf.Clamp(carId, 0, carPrefabs.Length - 1);
+
+        NetworkPrefabRef selectedPrefab = carPrefabs[carId];
+        if (!selectedPrefab.IsValid)
+        {
+            Debug.LogError($"RaceSpawner: carPrefabs[{carId}] geçersiz!");
+            return;
+        }
 
         _spawnedPlayers.Add(player);
 
@@ -40,27 +47,23 @@ public class RaceSpawner : NetworkBehaviour
         nextIndex++;
 
         Runner.Spawn(
-            carPrefab,
+            selectedPrefab,
             sp.position,
             sp.rotation,
-            player, // InputAuthority bu player olur
+            player,
             (runner, obj) =>
             {
-                // PlayerRef -> spawned car eþlemesi (çok faydalý)
                 runner.SetPlayerObject(player, obj);
 
-                // Sürücüyü ata + baþlangýç lock
                 var seat = obj.GetComponent<VehicleSeat>();
                 if (seat != null)
                     seat.Server_AssignDriver(player, lockSeconds);
 
-                // Güvenli set (bazý prefab/physics durumlarýnda iþe yarar)
                 obj.transform.SetPositionAndRotation(sp.position, sp.rotation);
             }
         );
     }
 
-    // (Opsiyonel) Player çýkýnca temizlemek istersen çaðýrýrsýn
     public void Unregister(PlayerRef player)
     {
         _spawnedPlayers.Remove(player);

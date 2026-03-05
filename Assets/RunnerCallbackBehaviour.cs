@@ -9,6 +9,9 @@ using UnityEngine.SceneManagement;
 
 public class RunnerCallbackBehaviour : MonoBehaviour, INetworkRunnerCallbacks
 {
+    [Header("Player Data Prefab (must have NetworkObject + PlayerData)")]
+    [SerializeField] private NetworkPrefabRef playerDataPrefab;
+
     [Header("Return To Menu")]
     [SerializeField] private int menuSceneBuildIndex = 0; // Scenes/UI = 0
 
@@ -16,9 +19,8 @@ public class RunnerCallbackBehaviour : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (!runner.IsServer) return;
 
-        var rs = FindFirstObjectByType<RaceSpawner>();
-        if (rs != null)
-            rs.SpawnCarFor(player);
+        //  Artýk araba spawnlamýyoruz, PlayerData spawnluyoruz
+        runner.Spawn(playerDataPrefab, Vector3.zero, Quaternion.identity, player);
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
@@ -59,30 +61,23 @@ public class RunnerCallbackBehaviour : MonoBehaviour, INetworkRunnerCallbacks
 
     private void ReturnToMenu()
     {
-        // Zaten UI sahnesindeysek yapma
         if (SceneManager.GetActiveScene().buildIndex == menuSceneBuildIndex)
             return;
 
-        // UI sahnesine dön
         SceneManager.LoadScene(menuSceneBuildIndex);
     }
 
     public void OnConnectedToServer(NetworkRunner runner) { }
-
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }
     public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason) { }
-
     public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { }
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList) { }
     public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) { }
     public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { }
-
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { }
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
-
     public void OnSceneLoadDone(NetworkRunner runner) { }
     public void OnSceneLoadStart(NetworkRunner runner) { }
-
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
 }
