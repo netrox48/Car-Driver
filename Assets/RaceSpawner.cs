@@ -2,70 +2,65 @@ using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
-public class RaceSpawner : NetworkBehaviour
+public class RaceSpawner : MonoBehaviour
 {
-    [Header("Cars (index = CarId)")]
-    public NetworkPrefabRef[] carPrefabs;
-
+    public NetworkPrefabRef carPrefab;
     public Transform[] spawnPoints;
-    public float lockSeconds = 5f;
+    public float lockSeconds = 3f;
 
     private int nextIndex = 0;
-    private readonly HashSet<PlayerRef> _spawnedPlayers = new HashSet<PlayerRef>();
+    private readonly HashSet<PlayerRef> spawnedPlayers = new HashSet<PlayerRef>();
 
-    public void SpawnCarFor(PlayerRef player, int carId)
+    public void SpawnCarFor(NetworkRunner runner, PlayerRef player)
     {
-        if (!Object.HasStateAuthority) return;
+        if (runner == null) return;
 
-        if (carPrefabs == null || carPrefabs.Length == 0)
+        if (!carPrefab.IsValid)
         {
-            Debug.LogError("RaceSpawner: carPrefabs boþ!");
+            Debug.LogError("[RaceSpawner] carPrefab boþ/geçersiz! (NetworkProjectConfig->Prefabs + Inspector atamasý)");
             return;
         }
 
         if (spawnPoints == null || spawnPoints.Length == 0)
         {
-            Debug.LogError("RaceSpawner: spawnPoints boþ!");
+            Debug.LogError("[RaceSpawner] spawnPoints boþ!");
             return;
         }
 
-        if (_spawnedPlayers.Contains(player))
+        if (spawnedPlayers.Contains(player))
             return;
 
-        carId = Mathf.Clamp(carId, 0, carPrefabs.Length - 1);
-
-        NetworkPrefabRef selectedPrefab = carPrefabs[carId];
-        if (!selectedPrefab.IsValid)
-        {
-            Debug.LogError($"RaceSpawner: carPrefabs[{carId}] geçersiz!");
-            return;
-        }
-
-        _spawnedPlayers.Add(player);
+        spawnedPlayers.Add(player);
 
         Transform sp = spawnPoints[nextIndex % spawnPoints.Length];
         nextIndex++;
 
-        Runner.Spawn(
-            selectedPrefab,
-            sp.position,
-            sp.rotation,
-            player,
-            (runner, obj) =>
+        Vector3 pos = sp.position + Vector3.up * 0.3f;
+        Quaternion rot = sp.rotation;
+
+        Debug.Log($"[RaceSpawner] Spawn {player} at {sp.name}");
+
+        runner.Spawn(carPrefab, pos, rot, player, (r, obj) =>
+        {
+            r.SetPlayerObject(player, obj);
+
+            var seat = obj.GetComponent<VehicleSeat>();
+            if (seat != null && (r.IsServer || r.IsSharedModeMasterClient))
+                seat.Server_AssignDriver(player, lockSeconds);
+
+            var rb = obj.GetComponent<Rigidbody>();
+            if (rb != null)
             {
-                runner.SetPlayerObject(player, obj);
-
-                var seat = obj.GetComponent<VehicleSeat>();
-                if (seat != null)
-                    seat.Server_AssignDriver(player, lockSeconds);
-
-                obj.transform.SetPositionAndRotation(sp.position, sp.rotation);
+                rb.velocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
             }
-        );
+
+            obj.transform.SetPositionAndRotation(pos, rot);
+        });
     }
 
     public void Unregister(PlayerRef player)
     {
-        _spawnedPlayers.Remove(player);
+        spawnedPlayers.Remove(player);
     }
 }

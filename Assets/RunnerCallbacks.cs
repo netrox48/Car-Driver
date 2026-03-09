@@ -1,4 +1,4 @@
-#pragma warning disable UNT0006
+ï»¿#pragma warning disable UNT0006
 
 using Fusion;
 using Fusion.Sockets;
@@ -9,36 +9,41 @@ using UnityEngine.SceneManagement;
 
 public class RunnerCallbacks : MonoBehaviour, INetworkRunnerCallbacks
 {
-    [Header("Spawn PlayerData (NetworkObject + PlayerData script)")]
-    [SerializeField] private NetworkPrefabRef playerDataPrefab;
-
-    [Header("Return To Menu")]
-    [SerializeField] private int menuSceneBuildIndex = 0; // UI scene build index
+    [SerializeField] private int menuSceneBuildIndex = 0;
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        if (!runner.IsServer) return;
+        if (!(runner.IsServer || runner.IsSharedModeMasterClient))
+            return;
 
-        //  Artýk araba spawn etmiyoruz. Seçimi server'a taþýyacak PlayerData'yý spawn ediyoruz.
-        if (!playerDataPrefab.IsValid)
+        TrySpawnAll(runner);
+    }
+
+    public void OnSceneLoadDone(NetworkRunner runner)
+    {
+        if (!(runner.IsServer || runner.IsSharedModeMasterClient))
+            return;
+
+        TrySpawnAll(runner);
+    }
+
+    private void TrySpawnAll(NetworkRunner runner)
+    {
+        var rs = FindFirstObjectByType<RaceSpawner>();
+        if (rs == null)
         {
-            Debug.LogError("RunnerCallbacks: playerDataPrefab boþ/geçersiz! RunnerPrefab üzerindeki alana PlayerDataPrefab ver.");
+            Debug.LogError("[Spawn] RaceSpawner yok!");
             return;
         }
 
-        runner.Spawn(playerDataPrefab, Vector3.zero, Quaternion.identity, player);
+        foreach (var p in runner.ActivePlayers)
+            rs.SpawnCarFor(runner, p);
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-        if (!runner.IsServer) return;
-
-        // Sende zaten bu vardý: player için spawn korumasýný kaldýr
         var rs = FindFirstObjectByType<RaceSpawner>();
-        if (rs != null)
-            rs.Unregister(player);
-
-        // (Ýstersen burada player object despawn da ekleriz; þimdilik dokunmuyorum.)
+        if (rs != null) rs.Unregister(player);
     }
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
@@ -50,21 +55,16 @@ public class RunnerCallbacks : MonoBehaviour, INetworkRunnerCallbacks
             Brake = Input.GetKey(KeyCode.Space),
             RespawnHeld = Input.GetKey(KeyCode.R)
         };
-
         input.Set(data);
     }
 
-    public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
-
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
-        Debug.Log($"[Fusion] OnShutdown: {shutdownReason}");
         ReturnToMenu();
     }
 
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
     {
-        Debug.Log($"[Fusion] OnDisconnectedFromServer: {reason}");
         ReturnToMenu();
     }
 
@@ -76,6 +76,7 @@ public class RunnerCallbacks : MonoBehaviour, INetworkRunnerCallbacks
         SceneManager.LoadScene(menuSceneBuildIndex);
     }
 
+    public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
     public void OnConnectedToServer(NetworkRunner runner) { }
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }
     public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason) { }
@@ -86,7 +87,6 @@ public class RunnerCallbacks : MonoBehaviour, INetworkRunnerCallbacks
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { }
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
     public void OnSceneLoadStart(NetworkRunner runner) { }
-    public void OnSceneLoadDone(NetworkRunner runner) { }
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
 }

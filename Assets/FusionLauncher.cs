@@ -1,29 +1,24 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Fusion;
 using System.Threading.Tasks;
 
 public class FusionLauncher : MonoBehaviour
 {
-    [Header("Runner")]
-    public NetworkRunner runnerPrefab;
+    [Header("Runner Prefab (NetworkRunner içeren prefab)")]
+    [SerializeField] private NetworkRunner runnerPrefab;
+
     private NetworkRunner runner;
+    private bool callbacksAdded;
 
     [Header("Session")]
-    public string sessionName = "RaceRoom";
+    [SerializeField] private string sessionName = "RaceRoom";
 
-    [Header("Scene")]
-    public int sceneBuildIndex = 0;
-
-    private RunnerCallbacks callbacks;
-    private FusionInputProvider inputProvider;
+    [Header("Scene (RaceArena build index)")]
+    [SerializeField] private int sceneBuildIndex = 1;
 
     private void Awake()
     {
         EnsureRunner();
-    }
-
-    private void Start()
-    {
     }
 
     private void EnsureRunner()
@@ -33,42 +28,53 @@ public class FusionLauncher : MonoBehaviour
         runner = FindObjectOfType<NetworkRunner>();
         if (runner == null)
         {
-            runner = runnerPrefab != null
-                ? Instantiate(runnerPrefab)
-                : new GameObject("NetworkRunner").AddComponent<NetworkRunner>();
+            if (runnerPrefab == null)
+            {
+                Debug.LogError("FusionLauncher: runnerPrefab atanmadı!");
+                return;
+            }
+            runner = Instantiate(runnerPrefab);
         }
 
         runner.name = "NetworkRunner";
+        DontDestroyOnLoad(runner.gameObject);
 
         if (runner.GetComponent<NetworkSceneManagerDefault>() == null)
             runner.gameObject.AddComponent<NetworkSceneManagerDefault>();
 
         runner.ProvideInput = true;
 
-        if (callbacks == null)
-            callbacks = new RunnerCallbacks();
-
-        runner.AddCallbacks(callbacks);
-
-        if (inputProvider == null)
-            inputProvider = new FusionInputProvider();
-
-        runner.AddCallbacks(inputProvider);
+        if (!callbacksAdded)
+        {
+            var cb = runner.GetComponent<RunnerCallbacks>();
+            if (cb == null) cb = runner.gameObject.AddComponent<RunnerCallbacks>();
+            runner.AddCallbacks(cb);
+            callbacksAdded = true;
+        }
     }
 
     public void StartHost()
     {
+#if UNITY_WEBGL
+        _ = StartGame(GameMode.Shared);
+#else
         _ = StartGame(GameMode.Host);
+#endif
     }
 
     public void StartClient()
     {
+#if UNITY_WEBGL
+        _ = StartGame(GameMode.Shared);
+#else
         _ = StartGame(GameMode.Client);
+#endif
     }
 
     private async Task StartGame(GameMode mode)
     {
         EnsureRunner();
+        if (runner == null) return;
 
         var args = new StartGameArgs
         {
@@ -78,6 +84,10 @@ public class FusionLauncher : MonoBehaviour
             SceneManager = runner.GetComponent<NetworkSceneManagerDefault>()
         };
 
-        await runner.StartGame(args);
+        var result = await runner.StartGame(args);
+        if (!result.Ok)
+            Debug.LogError($"[Fusion] StartGame failed: {result.ShutdownReason}");
+        else
+            Debug.Log($"[Fusion] StartGame OK. mode={mode} session={sessionName}");
     }
 }
