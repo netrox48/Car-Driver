@@ -6,6 +6,9 @@ public class FusionLauncher : MonoBehaviour
     [Header("Runner Prefab")]
     [SerializeField] private NetworkRunner runnerPrefab;
 
+    [Header("Menu UI")]
+    [SerializeField] private GameObject menuCanvas;
+
     private NetworkRunner runner;
     private bool isStartingGame = false;
 
@@ -60,6 +63,10 @@ public class FusionLauncher : MonoBehaviour
     {
         if (isStartingGame) return;
 
+        // Menü kapanır
+        if (menuCanvas != null)
+            menuCanvas.SetActive(false);
+
         StartGame(GameMode.Shared);
     }
 
@@ -91,8 +98,16 @@ public class FusionLauncher : MonoBehaviour
         isStartingGame = false;
 
         if (!result.Ok)
+        {
             Debug.LogError("[Fusion] StartGame Failed: " + result.ShutdownReason);
+
+            // Hata olursa menü geri açılsın
+            if (menuCanvas != null)
+                menuCanvas.SetActive(true);
+        }
         else
+        {
             Debug.Log("[Fusion] Game Started");
+        }
     }
 }
