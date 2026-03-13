@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6263894884705320856}
   - component: {fileID: 1484507524145340488}
   - component: {fileID: 7160693052094076008}
-  - component: {fileID: -7830394510332083842}
+  - component: {fileID: -811742126038461925}
   m_Layer: 0
   m_Name: RunnerPrefab
   m_TagString: Untagged
@@ -61,7 +61,7 @@ MonoBehaviour:
   IsSceneTakeOverEnabled: 1
   LogSceneLoadErrors: 1
   DestroySpawnedPrefabsOnSceneUnload: 1
---- !u!114 &-7830394510332083842
+--- !u!114 &-811742126038461925
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -70,9 +70,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 7797483422134838226}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 21a29067c05893047b34b941684d955c, type: 3}
+  m_Script: {fileID: 11500000, guid: cfe42f12978d5c24fa1f3e66f5c78906, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerDataPrefab:
-    RawGuidValue: 5205a76fc6cca03418e6e302f156ba90
-  menuSceneBuildIndex: 0
