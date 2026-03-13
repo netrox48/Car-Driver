@@ -1,26 +1,25 @@
 using UnityEngine;
 using Fusion;
 
-public class CameraLocalOnly : MonoBehaviour
+[RequireComponent(typeof(Camera))]
+public class CameraLocalOnly : NetworkBehaviour
 {
-    public UnityEngine.Behaviour[] disableIfNotLocal;
+    private Camera cam;
+    private AudioListener listener;
 
-    private void Start()
+    void Awake()
     {
-        NetworkObject no = GetComponentInParent<NetworkObject>();
-        if (no == null) return;
+        cam = GetComponent<Camera>();
+        listener = GetComponent<AudioListener>();
+    }
 
-        if (!no.HasInputAuthority)
-        {
-            for (int i = 0; i < disableIfNotLocal.Length; i++)
-                if (disableIfNotLocal[i] != null)
-                    disableIfNotLocal[i].enabled = false;
+    public override void Spawned()
+    {
+        bool local = Object.HasInputAuthority;
 
-            AudioListener al = GetComponent<AudioListener>();
-            if (al != null) al.enabled = false;
+        cam.enabled = local;
 
-            Camera cam = GetComponent<Camera>();
-            if (cam != null) cam.enabled = false;
-        }
+        if (listener != null)
+            listener.enabled = local;
     }
 }

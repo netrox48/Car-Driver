@@ -19,7 +19,7 @@ public class SpeedLow : NetworkBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (Used) return;
-        if (!Object.HasStateAuthority) return; // sadece host karar versin
+        if (!Object.HasStateAuthority) return;
 
         CarController car = other.GetComponentInParent<CarController>();
         if (car == null) return;
@@ -29,10 +29,10 @@ public class SpeedLow : NetworkBehaviour
 
         Used = true;
 
-        NetworkObject carNo2 = car.GetComponent<NetworkObject>();
-        if (carNo2 != null && carNo2.InputAuthority != PlayerRef.None)
+        NetworkObject carNo = car.GetComponent<NetworkObject>();
+        if (carNo != null && carNo.InputAuthority != PlayerRef.None)
         {
-            RPC_StartBoostFOV(carNo2.InputAuthority, LowDuration);
+            RPC_StartBoostFOV(carNo.InputAuthority, LowDuration);
         }
 
         StartCoroutine(Boost(car, rb));
@@ -46,7 +46,7 @@ public class SpeedLow : NetworkBehaviour
         NetworkObject carNo = car.GetComponent<NetworkObject>();
         bool doFov = carNo != null && carNo.HasInputAuthority;
 
-        Camera cam = doFov ? car.vehicleCamera : null;
+        Camera cam = doFov ? car.GetComponentInChildren<Camera>(true) : null;
         float originalFOV = cam != null ? cam.fieldOfView : 0f;
         float targetFOV = originalFOV + LowFOVIncrease;
 
@@ -84,6 +84,7 @@ public class SpeedLow : NetworkBehaviour
             cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, originalFOV, Time.deltaTime * fovSmoothSpeed);
             yield return null;
         }
+
         cam.fieldOfView = originalFOV;
     }
 
@@ -91,9 +92,12 @@ public class SpeedLow : NetworkBehaviour
     private void RPC_StartBoostFOV([RpcTarget] PlayerRef targetPlayer, float duration)
     {
         CarController localCar = FindLocalCar();
-        if (localCar == null || localCar.vehicleCamera == null) return;
+        if (localCar == null) return;
 
-        StartCoroutine(BoostFOVOnly(localCar.vehicleCamera, duration));
+        Camera cam = localCar.GetComponentInChildren<Camera>(true);
+        if (cam == null) return;
+
+        StartCoroutine(BoostFOVOnly(cam, duration));
     }
 
     private CarController FindLocalCar()

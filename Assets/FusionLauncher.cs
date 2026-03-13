@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using Fusion;
-using System.Threading.Tasks;
 
 public class FusionLauncher : MonoBehaviour
 {
@@ -38,14 +37,13 @@ public class FusionLauncher : MonoBehaviour
             runner.gameObject.AddComponent<NetworkSceneManagerDefault>();
 
         runner.ProvideInput = true;
+
+        RunnerCallbacks callbacks = runner.GetComponent<RunnerCallbacks>();
+        if (callbacks != null)
+            runner.AddCallbacks(callbacks);
     }
 
-    public void StartHost()
-    {
-        StartGame(GameMode.Shared);
-    }
-
-    public void StartJoin()
+    public void StartRace()
     {
         StartGame(GameMode.Shared);
     }
@@ -65,12 +63,8 @@ public class FusionLauncher : MonoBehaviour
         var result = await runner.StartGame(args);
 
         if (!result.Ok)
-        {
             Debug.LogError("[Fusion] StartGame Failed: " + result.ShutdownReason);
-        }
         else
-        {
             Debug.Log("[Fusion] Game Started");
-        }
     }
 }
