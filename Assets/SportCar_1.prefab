@@ -1130,6 +1130,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6ebaa94097f3da47a01d47be07f26f3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8737317554390207630}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6ebaa94097f3da47a01d47be07f26f3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4759408904288049750}
   m_SourcePrefab: {fileID: 100100000, guid: f6ebaa94097f3da47a01d47be07f26f3, type: 3}
 --- !u!4 &6064422583433810922 stripped
 Transform:
@@ -1209,6 +1212,7 @@ MonoBehaviour:
   - {fileID: 8364254132281728923}
   - {fileID: 6322867659904457064}
   - {fileID: 8831394690510742369}
+  - {fileID: 4759408904288049750}
   - {fileID: 4372878122659420098}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &8364254132281728923
@@ -1307,6 +1311,26 @@ MonoBehaviour:
   rearLeftWheelTransform: {fileID: 4025324234133850184}
   rearRightWheelTransform: {fileID: 3891842887427857164}
   holdTimeForRespawn: 3
+--- !u!114 &4759408904288049750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6873329321224538448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df01cf69b58223c4abcd69f58a85d128, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rb: {fileID: 2965748197703906821}
+  forwardRef: {fileID: 6064422583433810922}
+  minSpeedToDrift: 8
+  sideGripNormal: 0.9
+  sideGripDrift: 0.45
+  extraYawTorque: 10
+  sideSlipAssist: 25
+  recoverStrength: 8
 --- !u!1001 &6838201629118819215
 PrefabInstance:
   m_ObjectHideFlags: 0
