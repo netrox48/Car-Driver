@@ -11,39 +11,53 @@ public class RunnerCallbacks : MonoBehaviour, INetworkRunnerCallbacks
 {
     [SerializeField] private int menuSceneBuildIndex = 0;
 
+    private RaceSpawner raceSpawner;
+
+    void Start()
+    {
+        raceSpawner = FindObjectOfType<RaceSpawner>();
+    }
+
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
+        Debug.Log("Player Joined: " + player);
+
         if (!(runner.IsServer || runner.IsSharedModeMasterClient))
             return;
 
-        TrySpawnAll(runner);
+        SpawnPlayer(runner, player);
     }
 
     public void OnSceneLoadDone(NetworkRunner runner)
     {
+        raceSpawner = FindObjectOfType<RaceSpawner>();
+
         if (!(runner.IsServer || runner.IsSharedModeMasterClient))
             return;
 
-        TrySpawnAll(runner);
+        foreach (var p in runner.ActivePlayers)
+            SpawnPlayer(runner, p);
     }
 
-    private void TrySpawnAll(NetworkRunner runner)
+    void SpawnPlayer(NetworkRunner runner, PlayerRef player)
     {
-        var rs = FindFirstObjectByType<RaceSpawner>();
-        if (rs == null)
+        if (raceSpawner == null)
         {
-            Debug.LogError("[Spawn] RaceSpawner yok!");
-            return;
+            raceSpawner = FindObjectOfType<RaceSpawner>();
+            if (raceSpawner == null)
+            {
+                Debug.LogError("RaceSpawner bulunamadı!");
+                return;
+            }
         }
 
-        foreach (var p in runner.ActivePlayers)
-            rs.SpawnCarFor(runner, p);
+        raceSpawner.SpawnCarFor(runner, player);
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-        var rs = FindFirstObjectByType<RaceSpawner>();
-        if (rs != null) rs.Unregister(player);
+        if (raceSpawner != null)
+            raceSpawner.Unregister(player);
     }
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
@@ -55,6 +69,7 @@ public class RunnerCallbacks : MonoBehaviour, INetworkRunnerCallbacks
             Brake = Input.GetKey(KeyCode.Space),
             RespawnHeld = Input.GetKey(KeyCode.R)
         };
+
         input.Set(data);
     }
 
@@ -68,7 +83,7 @@ public class RunnerCallbacks : MonoBehaviour, INetworkRunnerCallbacks
         ReturnToMenu();
     }
 
-    private void ReturnToMenu()
+    void ReturnToMenu()
     {
         if (SceneManager.GetActiveScene().buildIndex == menuSceneBuildIndex)
             return;

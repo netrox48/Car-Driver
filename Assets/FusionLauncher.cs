@@ -4,77 +4,55 @@ using System.Threading.Tasks;
 
 public class FusionLauncher : MonoBehaviour
 {
-    [Header("Runner Prefab (NetworkRunner içeren prefab)")]
+    [Header("Runner Prefab")]
     [SerializeField] private NetworkRunner runnerPrefab;
 
     private NetworkRunner runner;
-    private bool callbacksAdded;
 
-    [Header("Session")]
+    [Header("Session Name")]
     [SerializeField] private string sessionName = "RaceRoom";
 
-    [Header("Scene (RaceArena build index)")]
+    [Header("Race Scene Index")]
     [SerializeField] private int sceneBuildIndex = 1;
 
-    private void Awake()
+    void Start()
     {
         EnsureRunner();
     }
 
-    private void EnsureRunner()
+    void EnsureRunner()
     {
         if (runner != null) return;
 
         runner = FindObjectOfType<NetworkRunner>();
+
         if (runner == null)
         {
-            if (runnerPrefab == null)
-            {
-                Debug.LogError("FusionLauncher: runnerPrefab atanmadı!");
-                return;
-            }
             runner = Instantiate(runnerPrefab);
+            runner.name = "NetworkRunner";
         }
 
-        runner.name = "NetworkRunner";
         DontDestroyOnLoad(runner.gameObject);
 
         if (runner.GetComponent<NetworkSceneManagerDefault>() == null)
             runner.gameObject.AddComponent<NetworkSceneManagerDefault>();
 
         runner.ProvideInput = true;
-
-        if (!callbacksAdded)
-        {
-            var cb = runner.GetComponent<RunnerCallbacks>();
-            if (cb == null) cb = runner.gameObject.AddComponent<RunnerCallbacks>();
-            runner.AddCallbacks(cb);
-            callbacksAdded = true;
-        }
     }
 
     public void StartHost()
     {
-#if UNITY_WEBGL
-        _ = StartGame(GameMode.Shared);
-#else
-        _ = StartGame(GameMode.Host);
-#endif
+        StartGame(GameMode.Shared);
     }
 
-    public void StartClient()
+    public void StartJoin()
     {
-#if UNITY_WEBGL
-        _ = StartGame(GameMode.Shared);
-#else
-        _ = StartGame(GameMode.Client);
-#endif
+        StartGame(GameMode.Shared);
     }
 
-    private async Task StartGame(GameMode mode)
+    async void StartGame(GameMode mode)
     {
         EnsureRunner();
-        if (runner == null) return;
 
         var args = new StartGameArgs
         {
@@ -85,9 +63,14 @@ public class FusionLauncher : MonoBehaviour
         };
 
         var result = await runner.StartGame(args);
+
         if (!result.Ok)
-            Debug.LogError($"[Fusion] StartGame failed: {result.ShutdownReason}");
+        {
+            Debug.LogError("[Fusion] StartGame Failed: " + result.ShutdownReason);
+        }
         else
-            Debug.Log($"[Fusion] StartGame OK. mode={mode} session={sessionName}");
+        {
+            Debug.Log("[Fusion] Game Started");
+        }
     }
 }

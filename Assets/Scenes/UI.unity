@@ -207,7 +207,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 2071248598}
         m_TargetAssemblyTypeName: FusionLauncher, Assembly-CSharp
-        m_MethodName: StartClient
+        m_MethodName: StartJoin
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
