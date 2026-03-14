@@ -6,7 +6,11 @@ public class FusionLauncher : MonoBehaviour
     [Header("Runner Prefab")]
     [SerializeField] private NetworkRunner runnerPrefab;
 
+    [Header("Menu UI")]
+    [SerializeField] private GameObject menuCanvas;
+
     private NetworkRunner runner;
+    private bool isStartingGame = false;
 
     [Header("Session Name")]
     [SerializeField] private string sessionName = "RaceRoom";
@@ -14,12 +18,12 @@ public class FusionLauncher : MonoBehaviour
     [Header("Race Scene Index")]
     [SerializeField] private int sceneBuildIndex = 1;
 
-    void Start()
+    private void Start()
     {
         EnsureRunner();
     }
 
-    void EnsureRunner()
+    private void EnsureRunner()
     {
         if (runner != null) return;
 
@@ -27,6 +31,12 @@ public class FusionLauncher : MonoBehaviour
 
         if (runner == null)
         {
+            if (runnerPrefab == null)
+            {
+                Debug.LogError("[FusionLauncher] runnerPrefab atanmadı!");
+                return;
+            }
+
             runner = Instantiate(runnerPrefab);
             runner.name = "NetworkRunner";
         }
@@ -40,17 +50,40 @@ public class FusionLauncher : MonoBehaviour
 
         RunnerCallbacks callbacks = runner.GetComponent<RunnerCallbacks>();
         if (callbacks != null)
+        {
             runner.AddCallbacks(callbacks);
+        }
+        else
+        {
+            Debug.LogError("[FusionLauncher] RunnerPrefab üzerinde RunnerCallbacks yok!");
+        }
     }
 
     public void StartRace()
     {
+        if (isStartingGame) return;
+
+        // Menü kapanır
+        if (menuCanvas != null)
+            menuCanvas.SetActive(false);
+
         StartGame(GameMode.Shared);
     }
 
-    async void StartGame(GameMode mode)
+    private async void StartGame(GameMode mode)
     {
         EnsureRunner();
+
+        if (runner == null)
+            return;
+
+        if (runner.IsRunning)
+        {
+            Debug.LogWarning("[FusionLauncher] Runner zaten çalışıyor.");
+            return;
+        }
+
+        isStartingGame = true;
 
         var args = new StartGameArgs
         {
@@ -62,9 +95,19 @@ public class FusionLauncher : MonoBehaviour
 
         var result = await runner.StartGame(args);
 
+        isStartingGame = false;
+
         if (!result.Ok)
+        {
             Debug.LogError("[Fusion] StartGame Failed: " + result.ShutdownReason);
+
+            // Hata olursa menü geri açılsın
+            if (menuCanvas != null)
+                menuCanvas.SetActive(true);
+        }
         else
+        {
             Debug.Log("[Fusion] Game Started");
+        }
     }
 }
